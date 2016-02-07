@@ -1,0 +1,21 @@
+{
+  "name": "dslink-python-sensehat",
+  "version": "0.1.0",
+  "description": "Sense HAT DSLink",
+  "main": "src/SenseHATLink.py",
+  "engines": {
+    "packages/bin/python": ">=2.7.0"
+  },
+  "getDependencies": [
+    "chmod +x scripts/install.sh",
+    "scripts/install.sh"
+  ],
+  "configs": {
+    "broker": {
+      "type": "url"
+    },
+    "token": {
+      "type": "string"
+    }
+  }
+}

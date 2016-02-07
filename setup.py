@@ -11,6 +11,7 @@ setup(
         install_requires=[
             "dslink >=0.6.0, <0.7.0",
             "pillow",
-            "evdev"
+            "evdev",
+            "sense_hat"
         ]
 )
