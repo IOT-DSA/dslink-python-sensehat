@@ -4,10 +4,10 @@
   "description": "Sense HAT DSLink",
   "main": "src/SenseHATLink.py",
   "engines": {
-    "packages/bin/python": ">=2.7.0"
+    "python": ">=2.7.0"
   },
   "getDependencies": [
-    "chmod +x scripts/install.sh",
+    "python setup.py install",
     "scripts/install.sh"
   ],
   "configs": {
