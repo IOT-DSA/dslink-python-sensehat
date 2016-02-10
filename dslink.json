@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Sense HAT DSLink",
   "main": "src/SenseHATLink.py",
+  "sudo": true,
   "engines": {
     "python": ">=2.7.0"
   },
