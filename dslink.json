@@ -8,8 +8,7 @@
     "python": ">=2.7.0"
   },
   "getDependencies": [
-    "python setup.py install",
-    "scripts/install.sh"
+    "python setup.py install"
   ],
   "configs": {
     "broker": {
