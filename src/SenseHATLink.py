@@ -3,6 +3,7 @@ from sense_hat import SenseHat
 from evdev import InputDevice, list_devices, ecodes
 from twisted.internet import reactor
 
+
 class SenseHATLink(dslink.DSLink):
     def __init__(self, config):
         self.sense = SenseHat()
