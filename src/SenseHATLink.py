@@ -73,7 +73,12 @@ class SenseHATLink(dslink.DSLink):
                 "default": "0.1"
             },
             {
-                "name": "Color",
+                "name": "Foreground",
+                "type": "dynamic",
+                "editor": "color"
+            },
+            {
+                "name": "Background",
                 "type": "dynamic",
                 "editor": "color"
             }
@@ -212,15 +217,22 @@ class SenseHATLink(dslink.DSLink):
     def show_message(self, parameters):
         message = str(parameters[1]["Message"])
         scroll_speed = float(parameters[1]["Scroll Speed"])
-        try:
-            value = str(parameters[1]["Color"]).lstrip("#")
-            red, green, blue = rgb(hex(int(value))[2:].zfill(6))
-            self.sense.show_message(message,
-                                    scroll_speed=scroll_speed,
-                                    text_colour=[red, green, blue])
-        except KeyError:
-            self.sense.show_message(message,
-                                    scroll_speed=scroll_speed)
+        if "Foreground" in parameters[1]:
+            fgin = str(parameters[1]["Foreground"]).lstrip("#")
+            fgred, fggreen, fgblue = rgb(hex(int(fgin))[2:].zfill(6))
+            fg = [fgred, fggreen, fgblue]
+        else:
+            fg = [255, 255, 255]
+        if "Background" in parameters[1]:
+            bgin = str(parameters[1]["Background"]).lstrip("#")
+            bgred, bggreen, bgblue = rgb(hex(int(bgin))[2:].zfill(6))
+            bg = [bgred, bggreen, bgblue]
+        else:
+            bg = [0, 0, 0]
+        self.sense.show_message(message,
+                                scroll_speed=scroll_speed,
+                                text_colour=fg,
+                                back_colour=bg)
 
 
     def update(self):
