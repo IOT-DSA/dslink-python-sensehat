@@ -44,9 +44,8 @@ class SenseHATLink(dslink.DSLink):
             },
             {
                 "name": "Color",
-                "type": "string",
-                "editor": "color",
-                "default": "#ffffff"
+                "type": "dynamic",
+                "editor": "color"
             }
         ])
 
@@ -147,12 +146,16 @@ class SenseHATLink(dslink.DSLink):
     def show_message(self, parameters):
         message = str(parameters[1]["Message"])
         scroll_speed = float(parameters[1]["Scroll Speed"])
-        value = str(parameters[1]["Color"])
-        red, green, blue = rgb(hex(int(value))[2:].zfill(6))
+        try:
+            value = str(parameters[1]["Color"]).lstrip("#")
+            red, green, blue = rgb(hex(int(value))[2:].zfill(6))
+            self.sense.show_message(message,
+                                    scroll_speed=scroll_speed,
+                                    text_colour=[red, green, blue])
+        except KeyError:
+            self.sense.show_message(message,
+                                    scroll_speed=scroll_speed)
 
-        self.sense.show_message(message,
-                                scroll_speed=scroll_speed,
-                                text_colour=[red, green, blue])
 
     def update(self):
         """
