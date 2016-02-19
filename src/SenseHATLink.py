@@ -1,7 +1,16 @@
+from threading import Thread
+
 import dslink
 from sense_hat import SenseHat
 from evdev import InputDevice, list_devices, ecodes
 from twisted.internet import reactor
+
+_NUMERALS = '0123456789abcdefABCDEF'
+_HEXDEC = {v: int(v, 16) for v in (x+y for x in _NUMERALS for y in _NUMERALS)}
+
+
+def rgb(triplet):
+    return _HEXDEC[triplet[0:2]], _HEXDEC[triplet[2:4]], _HEXDEC[triplet[4:6]]
 
 
 class SenseHATLink(dslink.DSLink):
@@ -12,7 +21,7 @@ class SenseHATLink(dslink.DSLink):
 
     def start(self):
         self.responder.profile_manager.create_profile("show_message")
-        self.responder.profile_manager.register_callback("show_message", self.show_message)
+        self.responder.profile_manager.register_callback("show_message", self.start_show_message)
 
         reactor.callLater(0.5, self.update)
         reactor.callLater(0.01, self.quick_update)
@@ -32,6 +41,12 @@ class SenseHATLink(dslink.DSLink):
                 "name": "Scroll Speed",
                 "type": "number",
                 "default": "0.1"
+            },
+            {
+                "name": "Color",
+                "type": "string",
+                "editor": "color",
+                "default": "#ffffff"
             }
         ])
 
@@ -125,11 +140,19 @@ class SenseHATLink(dslink.DSLink):
 
         return root
 
+    def start_show_message(self, parameters):
+        thread = Thread(target=self.show_message, args=[parameters])
+        thread.start()
+
     def show_message(self, parameters):
         message = str(parameters[1]["Message"])
         scroll_speed = float(parameters[1]["Scroll Speed"])
+        value = str(parameters[1]["Color"])
+        red, green, blue = rgb(hex(int(value))[2:].zfill(6))
 
-        reactor.callLater(0.01, self.sense.show_message, message, scroll_speed=scroll_speed)
+        self.sense.show_message(message,
+                                scroll_speed=scroll_speed,
+                                text_colour=[red, green, blue])
 
     def update(self):
         """
