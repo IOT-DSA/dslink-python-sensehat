@@ -44,9 +44,7 @@ class SenseHATLink(dslink.DSLink):
     @staticmethod
     def set_key_state(key, event):
         if key.is_subscribed():
-            if event.state == SenseStick.STATE_HOLD and key.get_value() is not "HELD":
-                key.set_value("HELD", check=False)
-            elif event.state == SenseStick.STATE_PRESS and key.get_value() is not "DOWN":
+            if (event.state == SenseStick.STATE_PRESS or event.state == SenseStick.STATE_HOLD) and key.get_value() is not "DOWN":
                 key.set_value("DOWN", check=False)
             elif event.state == SenseStick.STATE_RELEASE and key.get_value() is not "UP":
                 key.set_value("UP", check=False)
@@ -166,27 +164,27 @@ class SenseHATLink(dslink.DSLink):
 
         up = dslink.Node("up", joystick)
         up.set_display_name("Up")
-        up.set_type(dslink.Value.build_enum(["UP, DOWN, HELD"]))
+        up.set_type(dslink.Value.build_enum(["UP, DOWN"]))
         up.set_value("UP", check=False)
 
         down = dslink.Node("down", joystick)
         down.set_display_name("Down")
-        down.set_type(dslink.Value.build_enum(["UP, DOWN, HELD"]))
+        down.set_type(dslink.Value.build_enum(["UP, DOWN"]))
         down.set_value("UP", check=False)
 
         left = dslink.Node("left", joystick)
         left.set_display_name("Left")
-        left.set_type(dslink.Value.build_enum(["UP, DOWN, HELD"]))
+        left.set_type(dslink.Value.build_enum(["UP, DOWN"]))
         left.set_value("UP", check=False)
 
         right = dslink.Node("right", joystick)
         right.set_display_name("Right")
-        right.set_type(dslink.Value.build_enum(["UP, DOWN, HELD"]))
+        right.set_type(dslink.Value.build_enum(["UP, DOWN"]))
         right.set_value("UP", check=False)
 
         button = dslink.Node("button", joystick)
         button.set_display_name("Button")
-        button.set_type(dslink.Value.build_enum(["UP, DOWN, HELD"]))
+        button.set_type(dslink.Value.build_enum(["UP, DOWN"]))
         button.set_value("UP", check=False)
 
         joystick.add_child(up)
