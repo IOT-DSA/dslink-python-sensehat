@@ -1,5 +1,6 @@
-from threading import Thread
 import json
+from threading import Thread
+import time
 
 import dslink
 from sense_hat import SenseHat
@@ -13,6 +14,69 @@ _HEXDEC = {v: int(v, 16) for v in (x+y for x in _NUMERALS for y in _NUMERALS)}
 def rgb(triplet):
     return _HEXDEC[triplet[0:2]], _HEXDEC[triplet[2:4]], _HEXDEC[triplet[4:6]]
 
+class MessageHandler:
+    def __init__(self, sense):
+        self.sense = sense
+        self.cancel = False
+        self.running = False
+
+    def do_cancel(self):
+        if self.running:
+            self.cancel = True
+            i = 0
+            while self.running:
+                time.sleep(0.1)
+                i += 1
+                if i > 20:
+                    break
+
+    def show_message(
+            self,
+            text_string,
+            scroll_speed=.1,
+            text_colour=[255, 255, 255],
+            back_colour=[0, 0, 0]
+    ):
+        """
+        Scrolls a string of text across the LED matrix using the specified
+        speed and colours
+        """
+        self.running = True
+
+        # We must rotate the pixel map left through 90 degrees when drawing
+        # text, see _load_text_assets
+        previous_rotation = self.sense._rotation
+        self.sense._rotation -= 90
+        if self.sense._rotation < 0:
+            self.sense._rotation = 270
+        dummy_colour = [None, None, None]
+        string_padding = [dummy_colour] * 64
+        letter_padding = [dummy_colour] * 8
+        # Build pixels from dictionary
+        scroll_pixels = []
+        scroll_pixels.extend(string_padding)
+        for s in text_string:
+            scroll_pixels.extend(self.sense._trim_whitespace(self.sense._get_char_pixels(s)))
+            scroll_pixels.extend(letter_padding)
+        scroll_pixels.extend(string_padding)
+        # Recolour pixels as necessary
+        coloured_pixels = [
+            text_colour if pixel == [255, 255, 255] else back_colour
+            for pixel in scroll_pixels
+            ]
+        # Shift right by 8 pixels per frame to scroll
+        scroll_length = len(coloured_pixels) // 8
+        for i in range(scroll_length - 8):
+            if self.cancel:
+                break
+            start = i * 8
+            end = start + 64
+            self.sense.set_pixels(coloured_pixels[start:end])
+            time.sleep(scroll_speed)
+        self.sense._rotation = previous_rotation
+        self.cancel = False
+        self.running = False
+
 
 class SenseHATLink(dslink.DSLink):
     def __init__(self, config):
@@ -21,6 +85,7 @@ class SenseHATLink(dslink.DSLink):
         self.stick = SenseStick()
         self.stick_thread = Thread(target=self.evdev_loop)
         self.stick_thread.start()
+        self.msg = MessageHandler(self.sense)
         dslink.DSLink.__init__(self, config)
 
     def evdev_loop(self):
@@ -281,6 +346,7 @@ class SenseHATLink(dslink.DSLink):
         return []
 
     def show_message(self, parameters):
+        self.msg.do_cancel()
         message = str(parameters[1]["Message"])
         scroll_speed = float(parameters[1]["Scroll Speed"])
         if "Foreground" in parameters[1]:
@@ -295,10 +361,10 @@ class SenseHATLink(dslink.DSLink):
             bg = [bgred, bggreen, bgblue]
         else:
             bg = [0, 0, 0]
-        self.sense.show_message(message,
-                                scroll_speed=scroll_speed,
-                                text_colour=fg,
-                                back_colour=bg)
+        self.msg.show_message(message,
+                              scroll_speed=scroll_speed,
+                              text_colour=fg,
+                              back_colour=bg)
 
     def set_pixel(self, parameters):
         x = int(parameters[1]["X"])
