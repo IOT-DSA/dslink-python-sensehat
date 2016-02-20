@@ -276,8 +276,11 @@ class SenseHATLink(dslink.DSLink):
                     "Invalid coordinate, 0-7 is valid."
                 ]
             ]
-        input = str(parameters[1]["Color"]).lstrip("#")
-        red, green, blue = rgb(hex(int(input))[2:].zfill(6))
+        if "Color" in parameters[1]:
+            input = str(parameters[1]["Color"]).lstrip("#")
+            red, green, blue = rgb(hex(int(input))[2:].zfill(6))
+        else:
+            red = green = blue = 255
 
         thread = Thread(target=self.sense.set_pixel, args=[x, y, red, green, blue])
         thread.start()
