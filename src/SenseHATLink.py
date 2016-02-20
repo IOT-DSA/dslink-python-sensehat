@@ -56,6 +56,9 @@ class SenseHATLink(dslink.DSLink):
         self.responder.profile_manager.create_profile("set_pixel")
         self.responder.profile_manager.register_callback("set_pixel", self.set_pixel)
 
+        self.responder.profile_manager.create_profile("clear_screen")
+        self.responder.profile_manager.register_callback("clear_screen", self.clear_screen)
+
         reactor.callLater(0.5, self.update)
         reactor.callLater(0.01, self.quick_update)
 
@@ -63,7 +66,7 @@ class SenseHATLink(dslink.DSLink):
         # Screen Manipulation
         show_message = dslink.Node("show_message", root)
         show_message.set_display_name("Show Message")
-        show_message.set_invokable("write")
+        show_message.set_invokable(dslink.Permission.WRITE)
         show_message.set_profile("show_message")
         show_message.set_parameters([
             {
@@ -114,6 +117,11 @@ class SenseHATLink(dslink.DSLink):
                 "type": "string"
             }
         ])
+
+        clear_screen = dslink.Node("clear_screen", root)
+        clear_screen.set_display_name("Clear Screen")
+        clear_screen.set_profile("clear_screen")
+        clear_screen.set_invokable(dslink.Permission.WRITE)
 
         # Temperature
         temperature = dslink.Node("temperature", root)
@@ -232,6 +240,7 @@ class SenseHATLink(dslink.DSLink):
         # Add Nodes to root
         root.add_child(show_message)
         root.add_child(set_pixel)
+        root.add_child(clear_screen)
         root.add_child(temperature)
         root.add_child(humidity)
         root.add_child(pressure)
@@ -290,6 +299,15 @@ class SenseHATLink(dslink.DSLink):
                 "Success"
             ]
         ]
+
+    def clear_screen(self, parameters):
+        thread = Thread(target=self.sense.clear)
+        thread.start()
+
+        return []
+
+    def set_pixels(self, parameters):
+        self.sense.set_pixels()
 
     def update(self):
         """
