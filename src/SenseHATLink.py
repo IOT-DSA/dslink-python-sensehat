@@ -1,4 +1,5 @@
 from threading import Thread
+import json
 
 import dslink
 from sense_hat import SenseHat
@@ -58,6 +59,9 @@ class SenseHATLink(dslink.DSLink):
 
         self.responder.profile_manager.create_profile("clear_screen")
         self.responder.profile_manager.register_callback("clear_screen", self.clear_screen)
+
+        self.responder.profile_manager.create_profile("set_pixels")
+        self.responder.profile_manager.register_callback("set_pixels", self.set_pixels)
 
         reactor.callLater(0.5, self.update)
         reactor.callLater(0.01, self.quick_update)
@@ -122,6 +126,17 @@ class SenseHATLink(dslink.DSLink):
         clear_screen.set_display_name("Clear Screen")
         clear_screen.set_profile("clear_screen")
         clear_screen.set_invokable(dslink.Permission.WRITE)
+
+        set_pixels = dslink.Node("set_pixels", root)
+        set_pixels.set_display_name("Set Pixels")
+        set_pixels.set_profile("set_pixels")
+        set_pixels.set_invokable(dslink.Permission.WRITE)
+        set_pixels.set_parameters([
+            {
+                "name": "Pixels",
+                "type": "array"
+            }
+        ])
 
         # Temperature
         temperature = dslink.Node("temperature", root)
@@ -241,6 +256,7 @@ class SenseHATLink(dslink.DSLink):
         root.add_child(show_message)
         root.add_child(set_pixel)
         root.add_child(clear_screen)
+        root.add_child(set_pixels)
         root.add_child(temperature)
         root.add_child(humidity)
         root.add_child(pressure)
@@ -307,7 +323,33 @@ class SenseHATLink(dslink.DSLink):
         return []
 
     def set_pixels(self, parameters):
-        self.sense.set_pixels()
+        pixels_in = parameters[1]["Pixels"]
+        pixels = []
+        for pixel_str in pixels_in:
+            pixel = json.loads(pixel_str)
+            if len(pixel) is not 3:
+                return [
+                    [
+                        "Pixel arrays must contain three values: red, green, and blue"
+                    ]
+                ]
+            for p in pixel:
+                if p > 255 or p < 0:
+                    return [
+                        [
+                            "Pixel colors must be 0-255"
+                        ]
+                    ]
+            pixels.append(pixel)
+
+        thread = Thread(target=self.sense.set_pixels, args=[pixels])
+        thread.start()
+
+        return [
+            [
+                "Success"
+            ]
+        ]
 
     def update(self):
         """
