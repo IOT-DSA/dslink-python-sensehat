@@ -64,7 +64,7 @@ class SenseHATLink(dslink.DSLink):
         self.responder.profile_manager.register_callback("set_pixels", self.set_pixels)
 
         reactor.callLater(0.5, self.update)
-        reactor.callLater(0.01, self.quick_update)
+        reactor.callLater(0.01, self.location_update)
 
     def get_default_nodes(self, root):
         # Screen Manipulation
@@ -252,6 +252,13 @@ class SenseHATLink(dslink.DSLink):
         joystick.add_child(right)
         joystick.add_child(button)
 
+        # Update configuration
+        location_update = dslink.Node("location_update", root)
+        location_update.set_display_name("Location Update Time")
+        location_update.set_writable(dslink.Permission.CONFIG)
+        location_update.set_type("number")
+        location_update.set_value(0.05)
+
         # Add Nodes to root
         root.add_child(show_message)
         root.add_child(set_pixel)
@@ -264,6 +271,7 @@ class SenseHATLink(dslink.DSLink):
         root.add_child(accelerometer)
         root.add_child(compass)
         root.add_child(joystick)
+        root.add_child(location_update)
 
         return root
 
@@ -368,7 +376,7 @@ class SenseHATLink(dslink.DSLink):
 
         reactor.callLater(0.5, self.update)
 
-    def quick_update(self):
+    def location_update(self):
         """
         Function that runs every 50 ms for values that need quick updates.
         """
@@ -408,8 +416,9 @@ class SenseHATLink(dslink.DSLink):
         if compass.is_subscribed():
             compass.set_value(north)
 
-        reactor.callLater(0.05, self.quick_update)
+        update_time = self.responder.get_super_root().get("/location_update").get_value()
+        reactor.callLater(update_time, self.location_update)
 
 
 if __name__ == "__main__":
-    SenseHATLink(dslink.Configuration("SenseHAT", responder=True, no_save_nodes=True))
+    SenseHATLink(dslink.Configuration("SenseHAT", responder=True))
