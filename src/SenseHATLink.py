@@ -53,11 +53,14 @@ class SenseHATLink(dslink.DSLink):
         self.responder.profile_manager.create_profile("show_message")
         self.responder.profile_manager.register_callback("show_message", self.start_show_message)
 
+        self.responder.profile_manager.create_profile("set_pixel")
+        self.responder.profile_manager.register_callback("set_pixel", self.set_pixel)
+
         reactor.callLater(0.5, self.update)
         reactor.callLater(0.01, self.quick_update)
 
     def get_default_nodes(self, root):
-        # Show Message
+        # Screen Manipulation
         show_message = dslink.Node("show_message", root)
         show_message.set_display_name("Show Message")
         show_message.set_invokable("write")
@@ -81,6 +84,34 @@ class SenseHATLink(dslink.DSLink):
                 "name": "Background",
                 "type": "dynamic",
                 "editor": "color"
+            }
+        ])
+
+        set_pixel = dslink.Node("set_pixel", root)
+        set_pixel.set_display_name("Set Pixel")
+        set_pixel.set_profile("set_pixel")
+        set_pixel.set_invokable(dslink.Permission.WRITE)
+        set_pixel.set_parameters([
+            {
+                "name": "X",
+                "type": "int",
+                "default": 0
+            },
+            {
+                "name": "Y",
+                "type": "int",
+                "default": 0
+            },
+            {
+                "name": "Color",
+                "type": "dynamic",
+                "editor": "color"
+            }
+        ])
+        set_pixel.set_columns([
+            {
+                "name": "Message",
+                "type": "string"
             }
         ])
 
@@ -200,6 +231,7 @@ class SenseHATLink(dslink.DSLink):
 
         # Add Nodes to root
         root.add_child(show_message)
+        root.add_child(set_pixel)
         root.add_child(temperature)
         root.add_child(humidity)
         root.add_child(pressure)
@@ -213,6 +245,7 @@ class SenseHATLink(dslink.DSLink):
     def start_show_message(self, parameters):
         thread = Thread(target=self.show_message, args=[parameters])
         thread.start()
+        return []
 
     def show_message(self, parameters):
         message = str(parameters[1]["Message"])
@@ -234,6 +267,26 @@ class SenseHATLink(dslink.DSLink):
                                 text_colour=fg,
                                 back_colour=bg)
 
+    def set_pixel(self, parameters):
+        x = int(parameters[1]["X"])
+        y = int(parameters[1]["Y"])
+        if (x < 0 or x > 7) or (y < 0 or y > 7):
+            return [
+                [
+                    "Invalid coordinate, 0-7 is valid."
+                ]
+            ]
+        input = str(parameters[1]["Color"]).lstrip("#")
+        red, green, blue = rgb(hex(int(input))[2:].zfill(6))
+
+        thread = Thread(target=self.sense.set_pixel, args=[x, y, red, green, blue])
+        thread.start()
+
+        return [
+            [
+                "Success"
+            ]
+        ]
 
     def update(self):
         """
