@@ -84,6 +84,7 @@ class SenseHATLink(dslink.DSLink):
         self.sense.clear()
         self.stick = SenseStick()
         self.stick_thread = Thread(target=self.evdev_loop)
+        self.stick_thread.daemon = True
         self.stick_thread.start()
         self.msg = MessageHandler(self.sense)
         dslink.DSLink.__init__(self, config)

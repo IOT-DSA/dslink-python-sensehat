@@ -9,7 +9,7 @@ setup(
     author_email="l.gorence@dglogik.com",
     license="Apache 2.0",
     install_requires=[
-        "dslink == 0.6.5",
+        "dslink == 0.6.6",
         "evdev",
         "sense_hat"
     ]
