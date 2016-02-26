@@ -14,6 +14,7 @@ _HEXDEC = {v: int(v, 16) for v in (x+y for x in _NUMERALS for y in _NUMERALS)}
 def rgb(triplet):
     return _HEXDEC[triplet[0:2]], _HEXDEC[triplet[2:4]], _HEXDEC[triplet[4:6]]
 
+
 class MessageHandler:
     def __init__(self, sense):
         self.sense = sense
@@ -200,7 +201,7 @@ class SenseHATLink(dslink.DSLink):
         set_pixels.set_parameters([
             {
                 "name": "Pixels",
-                "type": "array"
+                "type": "string"
             }
         ])
 
@@ -398,10 +399,8 @@ class SenseHATLink(dslink.DSLink):
         return []
 
     def set_pixels(self, parameters):
-        pixels_in = parameters[1]["Pixels"]
-        pixels = []
-        for pixel_str in pixels_in:
-            pixel = json.loads(pixel_str)
+        pixels = json.loads(parameters[1]["Pixels"])
+        for pixel in pixels:
             if len(pixel) is not 3:
                 return [
                     [
@@ -415,7 +414,6 @@ class SenseHATLink(dslink.DSLink):
                             "Pixel colors must be 0-255"
                         ]
                     ]
-            pixels.append(pixel)
 
         thread = Thread(target=self.sense.set_pixels, args=[pixels])
         thread.start()
