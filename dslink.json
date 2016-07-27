@@ -1,6 +1,6 @@
 {
   "name": "dslink-python-sensehat",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "Sense HAT DSLink",
   "main": "src/SenseHATLink.py",
   "sudo": true,
